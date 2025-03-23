@@ -1,2 +1,3 @@
-# CV_with_IA_Agent
-Creation d'un CV avec des agents IA.
+# Creation d'un CV avec des agents IA
+
+## Introduction au prompting
