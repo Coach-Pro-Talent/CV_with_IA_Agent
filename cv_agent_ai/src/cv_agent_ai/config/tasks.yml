@@ -18,7 +18,7 @@ evaluate_projects:
   output_file: output/selected_projects.json
   agent: project_analyzer
 
-give_recommandations:
+give_recommendations:
   description: >
     **Contexte et Objectif** - Cette tâche vise à fournir des recommandations de projets et de certifications adaptées aux besoins de l'utilisateur pour améliorer son profil professionnel en fonction du poste ciblé ({description_poste}).
 
