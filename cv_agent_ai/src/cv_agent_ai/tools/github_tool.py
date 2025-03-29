@@ -5,6 +5,7 @@ from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from crewai_tools import DirectorySearchTool
 from pydantic import BaseModel, Field, field_validator, ConfigDict
+from crewai.tools import BaseTool
 import os
 import shutil
 import tempfile
@@ -36,34 +37,54 @@ class ProjectInfo(BaseModel):
             raise ValueError("La liste ne peut pas être vide")
         return [item.strip() for item in v if item.strip()]
 
-class GitHubAnalyzer:
-    """Classe pour analyser les dépôts GitHub"""
+class GitHubAnalyzerTool(BaseTool):
+    """Outil d'analyse de dépôts GitHub pour CrewAI"""
+    
+    name: str = "GitHub Analyzer"
+    description: str = """
+    Analyse des dépôts GitHub pour extraire des informations pertinentes pour le CV.
+    Fournit une analyse détaillée des projets, incluant :
+    - Informations de base du projet (nom, description, étoiles, etc.)
+    - Analyse du code source (fonctionnalités, technologies, complexité)
+    - Métadonnées (dates de création, mise à jour, visibilité)
+    - Contenu du README
+    - Analyse technique détaillée
+    """
     
     def __init__(self, github_token: str):
         """Initialise l'analyseur avec un token GitHub"""
+        super().__init__()
         if not github_token:
             raise ValueError("Le token GitHub est requis")
         self.github = Github(github_token)
         self.llm = ChatOpenAI(temperature=0)
 
-    def analyze_repositories(self, repo_urls: List[str]) -> List[Dict[str, Any]]:
+    def _run(self, repo_urls: List[str]) -> Dict[str, Any]:
         """Analyse plusieurs dépôts GitHub et retourne une liste d'informations"""
         if not repo_urls:
-            raise ValueError("La liste des URLs des dépôts est requide")
+            raise ValueError("La liste des URLs des dépôts est requise")
             
         results = []
         for repo_url in repo_urls:
             try:
-                result = self.analyze_repository(repo_url)
+                result = self._analyze_repository(repo_url)
                 if result:
                     results.append(result)
             except Exception as e:
                 print(f"Erreur lors de l'analyse du dépôt {repo_url}: {str(e)}")
                 continue
-                
-        return results
+        
+        return {
+            "repositories": results,
+            "analysis_summary": {
+                "total_repositories": len(repo_urls),
+                "successful_analyses": len(results),
+                "failed_analyses": len(repo_urls) - len(results),
+                "analysis_timestamp": datetime.now().isoformat()
+            }
+        }
 
-    def analyze_repository(self, repo_url: str) -> Dict[str, Any]:
+    def _analyze_repository(self, repo_url: str) -> Dict[str, Any]:
         """Analyse un dépôt GitHub et retourne les informations importantes"""
         if not repo_url:
             raise ValueError("L'URL du dépôt est requise")
@@ -72,7 +93,6 @@ class GitHubAnalyzer:
             if not self._is_valid_github_url(repo_url):
                 raise ValueError("URL GitHub invalide. Format attendu: https://github.com/username/repo")
             
-            # Récupérer les informations de base
             repo_info = self._get_repo_info(repo_url)
             if not repo_info:
                 raise ValueError("Impossible de récupérer les informations du dépôt")
@@ -80,7 +100,6 @@ class GitHubAnalyzer:
             # Analyser le code
             code_analysis = self._analyze_code(repo_url)
             
-            # Combiner les résultats
             result = {
                 "basic_info": repo_info,
                 "code_analysis": code_analysis,
@@ -109,7 +128,6 @@ class GitHubAnalyzer:
     def _get_repo_info(self, repo_url: str) -> Dict[str, Any]:
         """Récupère les informations de base du dépôt"""
         try:
-            # Extraire le nom d'utilisateur et le nom du repo de manière sécurisée
             parts = repo_url.split("github.com/")[1].split("/")
             if len(parts) < 2:
                 raise ValueError("Format d'URL invalide")
@@ -211,7 +229,7 @@ class GitHubAnalyzer:
             
             if readme:
                 content = readme.decoded_content.decode('utf-8')
-                return content[:5000]  # Limiter la taille pour éviter les problèmes de mémoire
+                return content[:5000] 
             else:
                 return "Pas de README trouvé dans ce dépôt"
                 

@@ -45,6 +45,7 @@ give_recommandations:
 
   output_file: output/recommandations.json
   agent: learning_recommender
+
 write_csv:
   description: >
     **Contexte et Objectif** - Cette tâche vise à reformuler les expériences du candidat sous un format optimisé pour un CV, en mettant en avant les compétences acquises via les projets pertinents. - L'approche suivie est la méthode STAR (Situation, Tâche, Action, Résultat) pour structurer les expériences de manière impactante.

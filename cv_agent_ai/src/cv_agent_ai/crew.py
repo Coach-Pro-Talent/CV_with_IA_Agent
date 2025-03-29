@@ -1,62 +1,86 @@
-from crewai import Agent, Crew, Process, Task
-from crewai.project import CrewBase, agent, crew, task
+from crewai import Agent, Crew, Process, Task, LLM
+import json
+from crewai.project import CrewBase, agent, crew, task, before_kickoff
+from cv_agent_ai.tools.github_tool import GitHubAnalyzerTool
+from dotenv import load_dotenv
+import os
+from typing import List, Dict, Any
+from datetime import datetime
 
-# If you want to run a snippet of code before or after the crew starts,
-# you can use the @before_kickoff and @after_kickoff decorators
-# https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
+# Charger les variables d'environnement
+load_dotenv()
 
 @CrewBase
 class CvAgentAi():
     """CvAgentAi crew"""
 
-    # Learn more about YAML configuration files here:
-    # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
-    # Tasks: https://docs.crewai.com/concepts/tasks#yaml-configuration-recommended
     agents_config = 'config/agents.yaml'
     tasks_config = 'config/tasks.yaml'
 
-    # If you would like to add tools to your agents, you can learn more about it here:
-    # https://docs.crewai.com/concepts/agents#agent-tools
-    @agent
-    def researcher(self) -> Agent:
-        return Agent(
-            config=self.agents_config['researcher'],
-            verbose=True
-        )
+    @before_kickoff
+    def before_kickoff(self):
+        print("Recuperation des projets github de l'utilisateur")
+
+        url_repo = self.inputs['url_repo']
+        github_analyzer = GitHubAnalyzerTool(github_token=os.getenv("GITHUB_TOKEN"))
+
+        result = github_analyzer._run(url_repo)
+
+        with open("output/projects_info.json", "w") as f:
+            json.dump(result, f)
+
+        print("Recuperation des projets github de l'utilisateur effectuée avec succès : le fichier output/projects_info.json a été créé")
+ 
+    self.llm = LLM(
+        model="deepseek-coder-33b-instruct",
+        api_key=os.getenv("DEEPSEEK_API_KEY"),
+        base_url=os.getenv("DEEPSEEK_API_BASE")
+    )
 
     @agent
-    def reporting_analyst(self) -> Agent:
+    def project_analyzer(self) -> Agent:
         return Agent(
-            config=self.agents_config['reporting_analyst'],
-            verbose=True
+            config=self.agents_config['project_analyzer'],
+            llm=self.llm
         )
 
-    # To learn more about structured task outputs,
-    # task dependencies, and task callbacks, check out the documentation:
-    # https://docs.crewai.com/concepts/tasks#overview-of-a-task
+    @agent
+    def learning_recommender(self) -> Agent:
+        return Agent(
+            config=self.agents_config['learning_recommender'],
+            llm=self.llm
+        )
+
+    @agent
+    def cv_generator(self) -> Agent:
+        return Agent(
+            config=self.agents_config['cv_generator'],
+            llm=self.llm
+        )
+    
     @task
-    def research_task(self) -> Task:
+    def evaluate_projects(self) -> Task:
         return Task(
-            config=self.tasks_config['research_task'],
+            config=self.tasks_config['evaluate_projects'],
         )
 
     @task
-    def reporting_task(self) -> Task:
+    def cv_generator(self) -> Task:
         return Task(
-            config=self.tasks_config['reporting_task'],
-            output_file='report.md'
+            config=self.tasks_config['cv_generator'],
+        )
+
+    @task
+    def learning_recommender(self) -> Task:
+        return Task(
+            config=self.tasks_config['give_recommender'],
         )
 
     @crew
     def crew(self) -> Crew:
-        """Creates the CvAgentAi crew"""
-        # To learn how to add knowledge sources to your crew, check out the documentation:
-        # https://docs.crewai.com/concepts/knowledge#what-is-knowledge
-
         return Crew(
-            agents=self.agents, # Automatically created by the @agent decorator
-            tasks=self.tasks, # Automatically created by the @task decorator
+            agents=self.agents, 
+            tasks=self.tasks,
             process=Process.sequential,
             verbose=True,
-            # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
         )
