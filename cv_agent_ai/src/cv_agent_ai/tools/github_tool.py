@@ -46,6 +46,23 @@ class GitHubAnalyzer:
         self.github = Github(github_token)
         self.llm = ChatOpenAI(temperature=0)
 
+    def analyze_repositories(self, repo_urls: List[str]) -> List[Dict[str, Any]]:
+        """Analyse plusieurs dépôts GitHub et retourne une liste d'informations"""
+        if not repo_urls:
+            raise ValueError("La liste des URLs des dépôts est requide")
+            
+        results = []
+        for repo_url in repo_urls:
+            try:
+                result = self.analyze_repository(repo_url)
+                if result:
+                    results.append(result)
+            except Exception as e:
+                print(f"Erreur lors de l'analyse du dépôt {repo_url}: {str(e)}")
+                continue
+                
+        return results
+
     def analyze_repository(self, repo_url: str) -> Dict[str, Any]:
         """Analyse un dépôt GitHub et retourne les informations importantes"""
         if not repo_url:
@@ -67,7 +84,8 @@ class GitHubAnalyzer:
             result = {
                 "basic_info": repo_info,
                 "code_analysis": code_analysis,
-                "analyzed_at": datetime.now().isoformat()
+                "analyzed_at": datetime.now().isoformat(),
+                "repo_url": repo_url
             }
             
             return result
@@ -104,7 +122,11 @@ class GitHubAnalyzer:
                 "description": repo.description or "Pas de description",
                 "stars": repo.stargazers_count,
                 "languages": list(repo.get_languages().keys()),
-                "readme": self._get_readme_content(repo)
+                "readme": self._get_readme_content(repo),
+                "created_at": repo.created_at.isoformat(),
+                "updated_at": repo.updated_at.isoformat(),
+                "topics": repo.get_topics(),
+                "visibility": repo.visibility
             }
         except GithubException as e:
             print(f"Erreur GitHub API: {str(e)}")
@@ -124,8 +146,8 @@ class GitHubAnalyzer:
                 directory=temp_dir,
                 name="Analyse du code source",
                 description="Analyse le contenu du code source pour extraire les informations pertinentes",
-                summarize=True,  # Activer la résumé automatique
-                result_as_answer=True  # Retourner le résultat comme une réponse structurée
+                summarize=True,
+                result_as_answer=True
             )
             
             # Créer le prompt pour l'analyse
@@ -143,9 +165,8 @@ class GitHubAnalyzer:
                 input_variables=["context"]
             )
             
-            # Analyser le code en utilisant la méthode run
             result = search_tool.run(
-                input="Analysez le code source pour comprendre la structure et les fonctionnalités du projet"
+                input="Tu es un expert en analyse de code source et tu dois analyser le code source pour extraire les informations pertinentes notamment les fonctionnalités principales, les technologies utilisées et le niveau de difficulté"
             )
             
             if not result:
