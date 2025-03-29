@@ -1,93 +1,134 @@
 from typing import Dict, Any, List
-from github import Github
-import requests
-from ..utils.logger import Logger
-from ..utils.exceptions import GitHubError, APIError
-from ..utils.validators import DataValidator
-from langchain.tools import tool
-from crewai.tools import DirectoryRAGSearch
+from github import Github, GithubException
+from datetime import datetime
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
-from langchain.output_parsers import PydanticOutputParser
-from pydantic import BaseModel, Field
-import re
+from crewai_tools import DirectorySearchTool
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 import os
-from datetime import datetime
+import shutil
+import tempfile
+from pathlib import Path
 
 class ProjectInfo(BaseModel):
-    """Structure simple pour stocker les informations du projet"""
-    description: str = Field(description="Description simple du projet")
+    """Classe simple pour stocker les informations d'un projet"""
+    model_config = ConfigDict(extra='forbid')
+    
+    description: str = Field(description="Description courte du projet")
     main_features: List[str] = Field(description="Liste des fonctionnalités principales")
     technologies: List[str] = Field(description="Technologies utilisées")
     difficulty: str = Field(description="Niveau de difficulté (Débutant, Intermédiaire, Avancé)")
 
-class GitHubTools:
-    def __init__(self, github_token: str, logger: Logger):
-        self.github = Github(github_token)
-        self.logger = logger
-        self.validator = DataValidator()
-        self.parser = PydanticOutputParser(pydantic_object=ProjectInfo)
+    @field_validator('difficulty')
+    @classmethod
+    def validate_difficulty(cls, v: str) -> str:
+        """Valide le niveau de difficulté"""
+        valid_levels = ["Débutant", "Intermédiaire", "Avancé"]
+        if v not in valid_levels:
+            raise ValueError(f"Le niveau de difficulté doit être l'un des suivants: {', '.join(valid_levels)}")
+        return v
 
-    @tool("Analyse un dépôt GitHub et extrait les informations pertinentes")
+    @field_validator('main_features', 'technologies')
+    @classmethod
+    def validate_list_items(cls, v: List[str]) -> List[str]:
+        """Valide les listes de fonctionnalités et technologies"""
+        if not v:
+            raise ValueError("La liste ne peut pas être vide")
+        return [item.strip() for item in v if item.strip()]
+
+class GitHubAnalyzer:
+    """Classe pour analyser les dépôts GitHub"""
+    
+    def __init__(self, github_token: str):
+        """Initialise l'analyseur avec un token GitHub"""
+        if not github_token:
+            raise ValueError("Le token GitHub est requis")
+        self.github = Github(github_token)
+        self.llm = ChatOpenAI(temperature=0)
+
     def analyze_repository(self, repo_url: str) -> Dict[str, Any]:
-        """Analyse un dépôt GitHub et extrait les informations pertinentes."""
+        """Analyse un dépôt GitHub et retourne les informations importantes"""
+        if not repo_url:
+            raise ValueError("L'URL du dépôt est requise")
+            
         try:
-            self.logger.info("L'url de votre repos doit être au format : https://github.com/username/repo-name")
-            self.logger.debug(f"Analyse du dépôt: {repo_url}")
+            if not self._is_valid_github_url(repo_url):
+                raise ValueError("URL GitHub invalide. Format attendu: https://github.com/username/repo")
             
-            parts = repo_url.rstrip('/').split('/')
-            if len(parts) < 5:
-                raise GitHubError("URL de dépôt GitHub invalide reverifier s'il vous plait inspirez vous de l'exemple donnée precedemment")
+            # Récupérer les informations de base
+            repo_info = self._get_repo_info(repo_url)
+            if not repo_info:
+                raise ValueError("Impossible de récupérer les informations du dépôt")
             
-            username = parts[-2]
-            repo_name = parts[-1]
-            
-            repo = self.github.get_repo(f"{username}/{repo_name}")
-            
-            basic_info = {
-                'name': repo.name,
-                'description': repo.description,
-                'stars': repo.stargazers_count,
-                'forks': repo.forks_count,
-                'languages': list(repo.get_languages().keys()),
-                'topics': repo.get_topics(),
-                'readme': self._get_readme_content(repo),
-                'issues': self._get_issues_stats(repo),
-                'pull_requests': self._get_pull_requests_stats(repo)
-            }
-            
+            # Analyser le code
             code_analysis = self._analyze_code(repo_url)
             
             # Combiner les résultats
-            data = {
-                "basic_info": basic_info,
+            result = {
+                "basic_info": repo_info,
                 "code_analysis": code_analysis,
                 "analyzed_at": datetime.now().isoformat()
             }
             
-            errors = self.validator.validate_project_data(data)
-            if errors:
-                self.logger.warning(f"Problèmes de validation pour {repo_url}: {errors}")
-            return data
+            return result
             
+        except GithubException as e:
+            print(f"Erreur GitHub: {str(e)}")
+            raise
         except Exception as e:
-            self.logger.error(f"Erreur lors de l'analyse du dépôt {repo_url}", exc_info=e)
-            raise GitHubError(f"Erreur lors de l'analyse du dépôt: {str(e)}")
+            print(f"Erreur lors de l'analyse du dépôt: {str(e)}")
+            raise
+
+    def _is_valid_github_url(self, url: str) -> bool:
+        """Vérifie si l'URL est une URL GitHub valide"""
+        if not url:
+            return False
+        parts = url.split("/")
+        return (url.startswith("https://github.com/") and 
+                len(parts) >= 5 and 
+                parts[3] and parts[4])
+
+    def _get_repo_info(self, repo_url: str) -> Dict[str, Any]:
+        """Récupère les informations de base du dépôt"""
+        try:
+            # Extraire le nom d'utilisateur et le nom du repo de manière sécurisée
+            parts = repo_url.split("github.com/")[1].split("/")
+            if len(parts) < 2:
+                raise ValueError("Format d'URL invalide")
+                
+            username, repo_name = parts[0], parts[1]
+            repo = self.github.get_repo(f"{username}/{repo_name}")
+            
+            return {
+                "name": repo.name,
+                "description": repo.description or "Pas de description",
+                "stars": repo.stargazers_count,
+                "languages": list(repo.get_languages().keys()),
+                "readme": self._get_readme_content(repo)
+            }
+        except GithubException as e:
+            print(f"Erreur GitHub API: {str(e)}")
+            return {}
+        except Exception as e:
+            print(f"Erreur lors de la récupération des informations: {str(e)}")
+            return {}
 
     def _analyze_code(self, repo_url: str) -> Dict[str, Any]:
-        """Analyse le code source du projet."""
+        """Analyse le code source du projet"""
+        temp_dir = None
         try:
-        
-            temp_path = self._clone_repo(repo_url)
+            temp_dir = tempfile.mkdtemp(prefix="github_analysis_")
+            self._clone_repo(repo_url, temp_dir)
             
-            # Utiliser DirectoryRAGSearch pour analyser le code
-            rag_search = DirectoryRAGSearch(
-                directory=temp_path,
-                glob="**/*.py",
-                chunk_size=1000,
-                chunk_overlap=200
+            search_tool = DirectorySearchTool(
+                directory=temp_dir,
+                name="Analyse du code source",
+                description="Analyse le contenu du code source pour extraire les informations pertinentes",
+                summarize=True,  # Activer la résumé automatique
+                result_as_answer=True  # Retourner le résultat comme une réponse structurée
             )
             
+            # Créer le prompt pour l'analyse
             prompt = PromptTemplate(
                 template="""Analysez ce code et donnez une description simple du projet.
                 Incluez:
@@ -98,43 +139,64 @@ class GitHubTools:
                 
                 Code:
                 {context}
-                
-                {format_instructions}
                 """,
-                input_variables=["context"],
-                partial_variables={"format_instructions": self.parser.get_format_instructions()}
+                input_variables=["context"]
             )
             
-            # Analyser le code
-            llm = ChatOpenAI(temperature=0)
-            docs = rag_search.search("", k=5)
-            result = llm.invoke(prompt.format(context=docs))
-
-            self._cleanup_repo(temp_path)
-    
-            return self.parser.parse(result)
+            # Analyser le code en utilisant la méthode run
+            result = search_tool.run(
+                input="Analysez le code source pour comprendre la structure et les fonctionnalités du projet"
+            )
+            
+            if not result:
+                return {"error": "Aucun code trouvé à analyser"}
+                
+            analysis = self.llm.invoke(prompt.format(context=result))
+            return {"analysis": analysis.content}
             
         except Exception as e:
-            self.logger.error(f"Erreur lors de l'analyse du code: {str(e)}")
-            raise GitHubError(f"Erreur lors de l'analyse du code: {str(e)}")
+            print(f"Erreur lors de l'analyse du code: {str(e)}")
+            return {"error": str(e)}
+        finally:
+            if temp_dir and os.path.exists(temp_dir):
+                self._cleanup_repo(temp_dir)
 
-    def _clone_repo(self, repo_url: str) -> str:
-        """Clone le dépôt dans un dossier temporaire Pour analyser notre repo"""
-        temp_path = f"temp_repo_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        os.system(f"git clone {repo_url} {temp_path}")
-        return temp_path
+    def _clone_repo(self, repo_url: str, target_dir: str) -> None:
+        """Clone le dépôt dans un dossier temporaire de manière sécurisée"""
+        try:
+            os.system(f'git clone --depth 1 {repo_url} "{target_dir}"')
+            if not os.path.exists(target_dir):
+                raise ValueError("Le clonage a échoué")
+        except Exception as e:
+            print(f"Erreur lors du clonage du dépôt: {str(e)}")
+            raise
 
-    def _cleanup_repo(self, path: str):
-        """Supprime le dépôt temporaire"""
-        if os.path.exists(path):
-            os.system(f"rm -rf {path}")
+    def _cleanup_repo(self, path: str) -> None:
+        """Supprime le dépôt temporaire de manière sécurisée"""
+        try:
+            if os.path.exists(path):
+                shutil.rmtree(path)
+        except Exception as e:
+            print(f"Erreur lors du nettoyage du dossier temporaire: {str(e)}")
 
     def _get_readme_content(self, repo) -> str:
-        """Récupère le contenu du README."""
+        """Récupère le contenu du README de manière sécurisée"""
         try:
-            readme = repo.get_readme()
-            return readme.decoded_content.decode('utf-8')
-        except:
-            return "Oups vous avez oublié de mettre un README.md dans votre repo ce n'est pas une bonne pratique"
-
-   
+            readme = None
+            for file in repo.get_contents(""):
+                if file.name.lower().startswith("readme"):
+                    readme = file
+                    break
+            
+            if readme:
+                content = readme.decoded_content.decode('utf-8')
+                return content[:5000]  # Limiter la taille pour éviter les problèmes de mémoire
+            else:
+                return "Pas de README trouvé dans ce dépôt"
+                
+        except GithubException as e:
+            print(f"Erreur GitHub API lors de la lecture du README: {str(e)}")
+            return "Impossible de lire le README"
+        except Exception as e:
+            print(f"Erreur lors de la lecture du README: {str(e)}")
+            return "Impossible de lire le README"
