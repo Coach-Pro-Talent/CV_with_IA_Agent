@@ -1,10 +1,10 @@
-evaluate_projects_task:
+analyze_projects:
   description: >
-    **Contexte et Objectif** - Cette tâche vise à analyser une liste de projets disponibles afin d'identifier ceux qui sont les plus pertinents pour un poste spécifique ({description_poste}). - L'objectif est de fournir une évaluation objective des projets en fonction des exigences du poste et de sélectionner les meilleurs.
+    **Contexte et Objectif** - Cette tâche vise à analyser une liste de projets disponibles afin d'identifier ceux qui sont les plus pertinents pour un poste spécifique ({job_description}). - L'objectif est de fournir une évaluation objective des projets en fonction des exigences du poste et de sélectionner les meilleurs.
 
     **Étape 1 : Lecture des projets** - Utilise 'FileReadTool' pour lire la liste des projets depuis 'output/projects_info.json'.
 
-    **Étape 2 : Évaluation des projets** - Pour chaque projet, analyse les compétences et technologies mises en œuvre. - Compare ces compétences avec celles requises pour {description_poste}. - Attribue une note entre 0 et 10 en utilisant des critères objectifs tels que :
+    **Étape 2 : Évaluation des projets** - Pour chaque projet, analyse les compétences et technologies mises en œuvre. - Compare ces compétences avec celles requises pour {job_description}. - Attribue une note entre 0 et 10 en utilisant des critères objectifs tels que :
       - Adéquation technologique avec le poste
       - Niveau de complexité et d'impact du projet
       - Expérience acquise pertinente pour le poste
@@ -18,13 +18,13 @@ evaluate_projects_task:
   output_file: output/selected_projects.json
   agent: project_analyzer
 
-give_recommendations_task:
+give_recommandations:
   description: >
-    **Contexte et Objectif** - Cette tâche vise à fournir des recommandations de projets et de certifications adaptées aux besoins de l'utilisateur pour améliorer son profil professionnel en fonction du poste ciblé ({description_poste}).
+    **Contexte et Objectif** - Cette tâche vise à fournir des recommandations de projets et de certifications adaptées aux besoins de l'utilisateur pour améliorer son profil professionnel en fonction du poste ciblé ({job_description}).
 
     **Étape 1 : Lecture des projets sélectionnés** - Utilise 'FileReadTool' pour lire 'output/selected_projects.json'.
 
-    **Étape 2 : Identification des axes d'amélioration** - Analyse {description_poste} pour extraire les compétences essentielles requises. - Compare ces compétences avec celles couvertes par les projets sélectionnés. - Identifie les compétences manquantes ou sous-développées.
+    **Étape 2 : Identification des axes d'amélioration** - Analyse {job_description} pour extraire les compétences essentielles requises. - Compare ces compétences avec celles couvertes par les projets sélectionnés. - Identifie les compétences manquantes ou sous-développées.
 
     **Étape 3 : Proposition de nouveaux projets** - Recherche des projets pertinents permettant d'acquérir les compétences manquantes. - Utilise des outils de recherche sur internet pour trouver des idées de projets. - Fournis une liste détaillée des projets recommandés avec :
       - Nom du projet
@@ -45,15 +45,15 @@ give_recommendations_task:
 
   output_file: output/recommandations.json
   agent: learning_recommender
-  context: [ evaluate_projects ]
+  context: [ analyze_projects ]
 
-write_csv_task:
+generate_cv:
   description: >
     **Contexte et Objectif** - Cette tâche vise à reformuler les expériences du candidat sous un format optimisé pour un CV, en mettant en avant les compétences acquises via les projets pertinents. - L'approche suivie est la méthode STAR (Situation, Tâche, Action, Résultat) pour structurer les expériences de manière impactante.
 
     **Étape 1 : Lecture des projets sélectionnés** - Utilise 'FileReadTool' pour lire 'output/selected_projects.json'.
 
-    **Étape 2 : Reformulation des expériences avec la méthode STAR** - Étudie chaque projet en profondeur. - Structure les réalisations en utilisant STAR (Situation, Tâche, Action, Résultat). - Mets en avant l'impact de chaque projet et sa pertinence pour {description_poste}.
+    **Étape 2 : Reformulation des expériences avec la méthode STAR** - Étudie chaque projet en profondeur. - Structure les réalisations en utilisant STAR (Situation, Tâche, Action, Résultat). - Mets en avant l'impact de chaque projet et sa pertinence pour {job_description}.
 
     **Étape 3 : Personnalisation selon l'entreprise** - Recherche des informations sur l'entreprise liée au poste. - Identifie les valeurs et attentes spécifiques de cette entreprise vis-à-vis des candidats. - Adapte la reformulation des expériences pour maximiser leur impact.
 
@@ -61,4 +61,4 @@ write_csv_task:
 
   output_file: output/cv_optimisé.csv
   agent: cv_generator
-  context: [ evaluate_projects ]
+  context: [ analyze_projects ]

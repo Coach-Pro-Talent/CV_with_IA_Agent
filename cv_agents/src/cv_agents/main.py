@@ -4,22 +4,22 @@ import warnings
 
 from datetime import datetime
 
-from cv_agents.crew import CvAgents
+from crew import CvAgents
 
-warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
-# This main file is intended to be a way for you to run your
-# crew locally, so refrain from adding unnecessary logic into this file.
-# Replace with inputs you want to test with, it will automatically
-# interpolate any tasks and agents information
 
 def run():
     """
     Run the crew.
     """
+    username  = input("Entrer votre username : ")
+    number_project = int(input("Entrer votre nombre de  project à selectionner : "))
+    job_description = input("La description du poste : ")
+
     inputs = {
-        'topic': 'AI LLMs',
-        'current_year': str(datetime.now().year)
+        'username': username,
+        'number_project':number_project,
+        'job_description':job_description
     }
     
     try:
@@ -51,16 +51,6 @@ def replay():
     except Exception as e:
         raise Exception(f"An error occurred while replaying the crew: {e}")
 
-def test():
-    """
-    Test the crew execution and returns the results.
-    """
-    inputs = {
-        "topic": "AI LLMs",
-        "current_year": str(datetime.now().year)
-    }
-    try:
-        CvAgents().crew().test(n_iterations=int(sys.argv[1]), openai_model_name=sys.argv[2], inputs=inputs)
 
-    except Exception as e:
-        raise Exception(f"An error occurred while testing the crew: {e}")
+if __name__=="__main__":
+    run()
