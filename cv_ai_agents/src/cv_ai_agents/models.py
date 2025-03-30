@@ -33,3 +33,15 @@ class CVContent(BaseModel):
     project_highlights: List[Dict[str, str]] = Field(..., description="Projets clés")
     learning_roadmap: List[Dict[str, str]] = Field(..., description="Plan de formation")
     professional_summary: str = Field(..., description="Résumé professionnel")
+
+
+class RepoInfo(BaseModel):
+    """Structure des informations brutes d'un repository"""
+    name: str = Field(..., description="Nom du dépôt")
+    description: str = Field("", description="Description du projet")
+    languages: Dict[str, int] = Field(..., description="Langages utilisés")
+    stars: int = Field(0, description="Nombre d'étoiles")
+    forks: int = Field(0, description="Nombre de forks")
+    topics: List[str] = Field(default_factory=list, description="Topics du projet")
+    updated_at: str = Field(..., description="Dernière mise à jour")
+    readme: str = Field("", description="Contenu du README")
