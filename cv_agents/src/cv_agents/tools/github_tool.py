@@ -1,18 +1,22 @@
 from typing import Dict, Any, List
-from github import Github, GithubException, Repository
 from datetime import datetime
-from langchain_openai import ChatOpenAI
-from langchain.prompts import PromptTemplate
-from crewai_tools import DirectorySearchTool
-from pydantic import BaseModel, Field, field_validator, ConfigDict, ValidationError
-from crewai.tools import BaseTool
 import tempfile
 import shutil
 from pathlib import Path
 import re
+import os
+from collections import Counter
+from github import Github, GithubException, Repository
+from git import Repo
+from pydantic import BaseModel, Field, field_validator, ConfigDict, ValidationError
+from crewai.tools import BaseTool
+from crewai import LLM
+from langchain.prompts import PromptTemplate
+from langchain.output_parsers import PydanticOutputParser
+from crewai_tools import DirectorySearchTool
 
 class ProjectInfo(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='allow')
     
     name: str = Field(..., description="Nom du dépôt")
     description: str = Field("", description="Description du projet")
@@ -40,8 +44,12 @@ class GitHubAnalyzerTool(BaseTool):
 
     def __init__(self, github_token: str):
         super().__init__()
-        self.github = Github(github_token)
-        self.llm = ChatOpenAI(model="gpt-4-turbo", temperature=0.1)
+        self.github = Github(auth = github_token)
+        self.llm = LLM(
+            model="deepseek-coder-33b-instruct",
+            api_key=os.getenv("DEEPSEEK_API_KEY"),
+            base_url=os.getenv("DEEP_SEEK_BASE")
+        )
         self.parser = PydanticOutputParser(pydantic_object=ProjectInfo)
 
     def _run(self, username: str, max_repos: int = 10) -> Dict[str, Any]:
@@ -86,7 +94,7 @@ class GitHubAnalyzerTool(BaseTool):
         try:
             search_tool = DirectorySearchTool(
                 directory=repo_path,
-                glob="**/*.py",
+                glob="**/*.*",
                 recursive=True,
                 chunk_size=2000,
                 similarity_threshold=0.85,
