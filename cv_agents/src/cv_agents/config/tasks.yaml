@@ -1,168 +1,43 @@
 analyze_projects:
-  description: >
-    **Contexte Global** Analyse approfondie des projets GitHub pour évaluation technique et professionnelle.
-
-    **Objectifs** - Extraire et analyser les projets GitHub de manière systématique - Évaluer la pertinence technique et professionnelle de chaque projet - Générer un rapport d'analyse détaillé
-
-    **Processus d'Analyse** 1. **Extraction des Données** [GitHubAnalyzerTool]
-       - Récupération des métadonnées des projets
-       - Analyse des structures de code
-       - Évaluation des patterns techniques
-
-    2. **Analyse Technique** [DirectorySearchTool]
-       - Complexité du code et architecture
-       - Technologies et frameworks utilisés
-       - Qualité du code et bonnes pratiques
-       - Patterns de conception identifiés
-
-    3. **Analyse Documentation** [CodeDocsRAGSearch]
-       - Qualité de la documentation
-       - Clarté des README
-       - Présence de documentation technique
-       - Guides d'utilisation et exemples
-
-    4. **Métriques d'Évaluation**
-       - Score technique (0-10)
-       - Complexité (Débutant/Intermédiaire/Avancé)
-       - Impact potentiel
-       - Maintenabilité
-
-    **Format de Sortie** ```json {
-      "projects": [{
-        "name": "string",
-        "technical_analysis": {
-          "complexity_score": "number",
-          "code_quality": "number",
-          "documentation_score": "number",
-          "technologies": ["string"]
-        },
-        "impact_metrics": {
-          "stars": "number",
-          "forks": "number",
-          "contributors": "number"
-        },
-        "evaluation": {
-          "overall_score": "number",
-          "strengths": ["string"],
-          "areas_for_improvement": ["string"]
-        }
-      }]
-    } ```
-
-  output_file: "output/analyzed_projects.json"
-  agent: github_analyst
+  description: |
+    Analysez les repositories GitHub fournis et évaluez leur qualité technique.
+    Utilisez le GitHubAnalyzerTool pour récupérer et analyser les données.
+    Sauvegardez les résultats dans le fichier de sortie spécifié.
+  expected_output: |
+    Un fichier JSON contenant l'analyse détaillée de chaque projet avec:
+    - Scores techniques
+    - Évaluation des fonctionnalités
+    - Technologies utilisées
+    - Niveau de difficulté
+    - Recommandations d'amélioration
 
 select_best_projects:
-  description: >
-    **Contexte Global** Sélection stratégique des projets les plus pertinents pour le profil de poste visé.
-
-    **Objectifs** - Évaluer l'adéquation entre les projets et le poste - Sélectionner les projets démontrant le meilleur potentiel - Justifier la sélection avec des critères objectifs
-
-    **Processus de Sélection** 1. **Analyse du Contexte** [BraveSearch]
-       - Étude des tendances du marché
-       - Analyse des compétences recherchées
-       - Identification des technologies émergentes
-
-    2. **Évaluation Contextuelle** [RAGTool]
-       - Matching avec la description du poste
-       - Analyse des compétences requises
-       - Évaluation de la pertinence technique
-
-    3. **Analyse Comparative** [JSONRAGSearch]
-       - Scoring des projets selon les critères
-       - Classement par pertinence
-       - Évaluation de la complémentarité
-
-    **Critères de Sélection** - Alignement technologique - Impact démontrable - Complexité appropriée - Innovation et créativité
-
-    **Format de Sortie** ```json {
-      "selected_projects": [{
-        "name": "string",
-        "relevance_score": "number",
-        "selection_criteria": {
-          "technical_match": "number",
-          "innovation_score": "number",
-          "impact_potential": "number"
-        },
-        "justification": "string"
-      }],
-      "selection_summary": {
-        "total_evaluated": "number",
-        "selection_criteria": ["string"],
-        "market_alignment": "string"
-      }
-    } ```
-
-  output_file: "output/selected_projects.json"
-  agent: project_selector
-  context: [ analyze_projects ]
+  description: |
+    Sélectionnez les projets les plus pertinents pour le CV en fonction du poste visé.
+    Analysez la correspondance entre les projets et la description du poste.
+  expected_output: |
+    Un fichier JSON contenant:
+    - Liste des projets sélectionnés
+    - Justification de la sélection
+    - Score de pertinence pour chaque projet
 
 provide_recommendations:
-  description: >
-    **Contexte Global** Recommandations personnalisées pour le développement professionnel basées sur l'analyse du portfolio.
-
-    **Objectifs** - Identifier les opportunités d'amélioration - Recommander des formations pertinentes - Suggérer des certifications stratégiques
-
-    **Processus d'Analyse** 1. **Analyse des Tendances** [BraveSearch]
-       - Veille technologique
-       - Évolutions du marché
-       - Compétences émergentes
-
-    2. **Évaluation des Formations** [WebsiteRAGSearch]
-       - Plateformes de formation
-       - Ressources d'apprentissage
-       - Parcours recommandés
-
-    3. **Analyse des Certifications** [ScrapeflyScrapeTool]
-       - Certifications pertinentes
-       - Prérequis et durée
-       - Reconnaissance marché
-
-    **Format de Sortie** ```json {
-      "skill_development": {
-        "priority_skills": ["string"],
-        "learning_path": [{
-          "skill": "string",
-          "recommended_resources": ["string"],
-          "estimated_timeline": "string"
-        }]
-      },
-      "certifications": [{
-        "name": "string",
-        "priority": "number",
-        "prerequisites": ["string"],
-        "estimated_cost": "number",
-        "market_value": "string"
-      }]
-    } ```
-
-  output_file: "output/recommendations.json"
-  agent: learning_recommender
-  context: [ select_best_projects ]
+  description: |
+    Proposez des recommandations de formation basées sur l'analyse des projets
+    et les exigences du poste visé.
+  expected_output: |
+    Un fichier JSON contenant:
+    - Liste des formations recommandées
+    - Justification des recommandations
+    - Priorités d'apprentissage
 
 generate_cv:
-  description: >
-    **Contexte Global** Génération d'un CV technique optimisé en format Markdown, mettant en valeur les projets et compétences.
-
-    **Objectifs** - Créer un CV professionnel et impactant - Structurer les informations de manière optimale - Optimiser pour les ATS
-
-    **Processus de Génération** 1. **Structuration du Contenu** [DirectoryRAGSearch]
-       - Organisation des sections
-       - Hiérarchisation des informations
-       - Sélection des templates
-
-    2. **Optimisation du Contenu** [MDXRAGSearch]
-       - Formulation impactante
-       - Mots-clés pertinents
-       - Format Markdown professionnel
-
-    3. **Intégration des Données** [JSONRAGSearch]
-       - Projets sélectionnés
-       - Compétences techniques
-       - Réalisations clés
-
-    **Format de Sortie** ```markdown # CV Structure - Informations personnelles - Résumé professionnel - Compétences techniques - Projets significatifs - Formation et certifications ```
-
-  output_file: "output/cv.md"
-  agent: cv_generator
-  context: [ select_best_projects, provide_recommendations ]
+  description: |
+    Générez un CV technique optimisé en format Markdown en utilisant
+    les projets sélectionnés et les recommandations.
+  expected_output: |
+    Un fichier Markdown contenant:
+    - Informations personnelles
+    - Résumé des compétences
+    - Projets pertinents
+    - Formations recommandées
