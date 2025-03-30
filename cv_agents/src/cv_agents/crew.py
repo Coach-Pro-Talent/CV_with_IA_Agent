@@ -4,14 +4,14 @@ from cv_agents.tools.github_tool import GitHubAnalyzerTool
 from crewai_tools import (
     DirectorySearchTool,
     FileReadTool,
-    FileWriteTool,
-    CodeDocsRAGSearch,
-    BraveSearch,
-    RAGTool,
-    JSONRAGSearch,
-    WebsiteRAGSearch,
-    ScrapeflyScrapeTool,
-    MDXRAGSearch
+    FileWriterTool,
+    CodeDocsSearchTool,
+    BraveSearchTool,
+    RagTool,
+    JSONSearchTool,
+    WebsiteSearchTool,
+    ScrapflyScrapeWebsiteTool,
+    MDXSearchTool
 )
 from dotenv import load_dotenv
 import json
@@ -30,7 +30,7 @@ class CvAgents:
     def __init__(self):
         load_dotenv()
         self.llm = LLM(
-            model="deepseek-coder-33b-instruct",
+            model=os.getenv("MODEL_NAME"),
             api_key=os.getenv("DEEPSEEK_API_KEY"),
             base_url=os.getenv("DEEP_SEEK_BASE")
         )
@@ -50,7 +50,7 @@ class CvAgents:
                 max_repos=self.inputs.number_project
             )
 
-            # Sauvegarde des résultats
+          
             output_dir = "output"
             os.makedirs(output_dir, exist_ok=True)
             output_file = os.path.join(output_dir, "projects_info.json")
@@ -74,7 +74,7 @@ class CvAgents:
                 self.github_tool,
                 DirectorySearchTool(),
                 FileReadTool(),
-                CodeDocsRAGSearch()
+                CodeDocsSearchTool()
             ],
             verbose=True
         )
@@ -87,9 +87,9 @@ class CvAgents:
             llm=self.llm,
             tools=[
                 self.github_tool,
-                BraveSearch(),
-                RAGTool(),
-                JSONRAGSearch()
+                BraveSearchTool(),
+                RagTool(),
+                JSONSearchTool()
             ],
             verbose=True
         )
@@ -103,7 +103,7 @@ class CvAgents:
             tools=[
                 BraveSearch(),
                 WebsiteRAGSearch(),
-                ScrapeflyScrapeTool(),
+                ScrapflyScrapeWebsiteTool(),
                 JSONRAGSearch()
             ],
             verbose=True
@@ -116,9 +116,9 @@ class CvAgents:
             config=self.agents_config['cv_generator'],
             llm=self.llm,
             tools=[
-                FileWriteTool(),
+               FileWriterTool(),
                 DirectoryRAGSearch(),
-                MDXRAGSearch(),
+                MDXSearchTool(),
                 JSONRAGSearch()
             ],
             verbose=True

@@ -2,6 +2,7 @@ from typing import Dict, Any, List
 from datetime import datetime
 import tempfile
 import shutil
+from github.auth import Token
 from pathlib import Path
 import re
 import os
@@ -44,7 +45,8 @@ class GitHubAnalyzerTool(BaseTool):
 
     def __init__(self, github_token: str):
         super().__init__()
-        self.github = Github(auth = github_token)
+        auth  = Token(github_token)
+        self.github = Github(auth = auth)
         self.llm = LLM(
             model="deepseek-coder-33b-instruct",
             api_key=os.getenv("DEEPSEEK_API_KEY"),
