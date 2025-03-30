@@ -1,17 +1,43 @@
-research_task:
-  description: >
-    Conduct a thorough research about {topic}
-    Make sure you find any interesting and relevant information given
-    the current year is {current_year}.
-  expected_output: >
-    A list with 10 bullet points of the most relevant information about {topic}
-  agent: researcher
+analyze_projects:
+  description: |
+    Analysez les repositories GitHub fournis et évaluez leur qualité technique.
+    Utilisez le GitHubAnalyzerTool pour récupérer et analyser les données.
+    Sauvegardez les résultats dans le fichier de sortie spécifié.
+  expected_output: |
+    Un fichier JSON contenant l'analyse détaillée de chaque projet avec:
+    - Scores techniques
+    - Évaluation des fonctionnalités
+    - Technologies utilisées
+    - Niveau de difficulté
+    - Recommandations d'amélioration
 
-reporting_task:
-  description: >
-    Review the context you got and expand each topic into a full section for a report.
-    Make sure the report is detailed and contains any and all relevant information.
-  expected_output: >
-    A fully fledged report with the main topics, each with a full section of information.
-    Formatted as markdown without '```'
-  agent: reporting_analyst
+select_best_projects:
+  description: |
+    Sélectionnez les projets les plus pertinents pour le CV en fonction du poste visé.
+    Analysez la correspondance entre les projets et la description du poste.
+  expected_output: |
+    Un fichier JSON contenant:
+    - Liste des projets sélectionnés
+    - Justification de la sélection
+    - Score de pertinence pour chaque projet
+
+provide_recommendations:
+  description: |
+    Proposez des recommandations de formation basées sur l'analyse des projets
+    et les exigences du poste visé.
+  expected_output: |
+    Un fichier JSON contenant:
+    - Liste des formations recommandées
+    - Justification des recommandations
+    - Priorités d'apprentissage
+
+generate_cv:
+  description: |
+    Générez un CV technique optimisé en format Markdown en utilisant
+    les projets sélectionnés et les recommandations.
+  expected_output: |
+    Un fichier Markdown contenant:
+    - Informations personnelles
+    - Résumé des compétences
+    - Projets pertinents
+    - Formations recommandées
