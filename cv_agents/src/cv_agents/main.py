@@ -1,56 +1,63 @@
 #!/usr/bin/env python
 import sys
 import warnings
-
 from datetime import datetime
+from cv_agents.crew import CvAgents
+import json
+import os
 
-from crew import CvAgents
+def get_user_inputs():
+    """Collecte les informations de l'utilisateur."""
+    print("\n=== Configuration de l'Analyse de Portfolio ===")
+    
+    # Collecte des informations
+    username = input("Entrer votre username GitHub : ")
+    number_project = int(input("Nombre de projets à analyser [5] : ") or "5")
+    job_description = input("Description du poste visé : ")
+    
+    return {
+        'username': username,
+        'number_project': number_project,
+        'job_description': job_description,
+        'timestamp': datetime.now().isoformat()
+    }
 
-
+def save_results(results, filename):
+    """Sauvegarde les résultats dans un fichier JSON."""
+    os.makedirs("output", exist_ok=True)
+    output_file = f"output/{filename}"
+    
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(results, f, ensure_ascii=False, indent=2)
+    
+    print(f"📁 Résultats sauvegardés dans: {output_file}")
 
 def run():
-    """
-    Run the crew.
-    """
-    username  = input("Entrer votre username : ")
-    number_project = int(input("Entrer votre nombre de  project à selectionner : "))
-    job_description = input("La description du poste : ")
-
-    inputs = {
-        'username': username,
-        'number_project':number_project,
-        'job_description':job_description
-    }
-    
+    """Exécute l'analyse du portfolio."""
     try:
-        CvAgents().crew().kickoff(inputs=inputs)
+        print("\n🚀 Démarrage de l'Analyse de Portfolio")
+        
+        # Collecte des informations
+        inputs = get_user_inputs()
+        
+        # Exécution de l'analyse
+        print("\n🔍 Analyse en cours...")
+        crew = CvAgents()
+        results = crew.crew().kickoff(inputs=inputs)
+        
+        # Sauvegarde des résultats
+        filename = f"analysis_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        save_results(results, filename)
+        
+        print("\n✅ Analyse terminée avec succès!")
+        
+    except KeyboardInterrupt:
+        print("\n⚠️ Analyse interrompue par l'utilisateur")
+        sys.exit(1)
     except Exception as e:
-        raise Exception(f"An error occurred while running the crew: {e}")
+        print(f"\n❌ Erreur: {str(e)}")
+        raise
 
 
-def train():
-    """
-    Train the crew for a given number of iterations.
-    """
-    inputs = {
-        "topic": "AI LLMs"
-    }
-    try:
-        CvAgents().crew().train(n_iterations=int(sys.argv[1]), filename=sys.argv[2], inputs=inputs)
-
-    except Exception as e:
-        raise Exception(f"An error occurred while training the crew: {e}")
-
-def replay():
-    """
-    Replay the crew execution from a specific task.
-    """
-    try:
-        CvAgents().crew().replay(task_id=sys.argv[1])
-
-    except Exception as e:
-        raise Exception(f"An error occurred while replaying the crew: {e}")
-
-
-if __name__=="__main__":
-    run()
+if __name__ == "__main__":
+   run()

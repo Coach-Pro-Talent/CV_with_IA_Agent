@@ -1,64 +1,168 @@
 analyze_projects:
   description: >
-    **Contexte et Objectif** - Cette tâche vise à analyser une liste de projets disponibles afin d'identifier ceux qui sont les plus pertinents pour un poste spécifique ({job_description}). - L'objectif est de fournir une évaluation objective des projets en fonction des exigences du poste et de sélectionner les meilleurs.
+    **Contexte Global** Analyse approfondie des projets GitHub pour évaluation technique et professionnelle.
 
-    **Étape 1 : Lecture des projets** - Utilise 'FileReadTool' pour lire la liste des projets depuis 'output/projects_info.json'.
+    **Objectifs** - Extraire et analyser les projets GitHub de manière systématique - Évaluer la pertinence technique et professionnelle de chaque projet - Générer un rapport d'analyse détaillé
 
-    **Étape 2 : Évaluation des projets** - Pour chaque projet, analyse les compétences et technologies mises en œuvre. - Compare ces compétences avec celles requises pour {job_description}. - Attribue une note entre 0 et 10 en utilisant des critères objectifs tels que :
-      - Adéquation technologique avec le poste
-      - Niveau de complexité et d'impact du projet
-      - Expérience acquise pertinente pour le poste
-      - Complémentarité avec les autres projets du candidat
-    - Justifie chaque note attribuée en expliquant les critères pris en compte.
+    **Processus d'Analyse** 1. **Extraction des Données** [GitHubAnalyzerTool]
+       - Récupération des métadonnées des projets
+       - Analyse des structures de code
+       - Évaluation des patterns techniques
 
-    **Étape 3 : Sélection des meilleurs projets** - Classe les projets en fonction des notes attribuées. - Sélectionne les {nombre_projet} meilleurs projets. - Si moins de {nombre_projet} projets pertinents sont trouvés, sélectionne uniquement les projets pertinents disponibles.
+    2. **Analyse Technique** [DirectorySearchTool]
+       - Complexité du code et architecture
+       - Technologies et frameworks utilisés
+       - Qualité du code et bonnes pratiques
+       - Patterns de conception identifiés
 
-    **Étape 4 : Génération du fichier de sortie** - Structure les données sous forme de fichier JSON avec les projets sélectionnés, leurs notes et justifications. - Enregistre le fichier sous 'output/selected_projects.json'.
+    3. **Analyse Documentation** [CodeDocsRAGSearch]
+       - Qualité de la documentation
+       - Clarté des README
+       - Présence de documentation technique
+       - Guides d'utilisation et exemples
 
-  output_file: output/selected_projects.json
-  agent: project_analyzer
+    4. **Métriques d'Évaluation**
+       - Score technique (0-10)
+       - Complexité (Débutant/Intermédiaire/Avancé)
+       - Impact potentiel
+       - Maintenabilité
 
-give_recommandations:
+    **Format de Sortie** ```json {
+      "projects": [{
+        "name": "string",
+        "technical_analysis": {
+          "complexity_score": "number",
+          "code_quality": "number",
+          "documentation_score": "number",
+          "technologies": ["string"]
+        },
+        "impact_metrics": {
+          "stars": "number",
+          "forks": "number",
+          "contributors": "number"
+        },
+        "evaluation": {
+          "overall_score": "number",
+          "strengths": ["string"],
+          "areas_for_improvement": ["string"]
+        }
+      }]
+    } ```
+
+  output_file: "output/analyzed_projects.json"
+  agent: github_analyst
+
+select_best_projects:
   description: >
-    **Contexte et Objectif** - Cette tâche vise à fournir des recommandations de projets et de certifications adaptées aux besoins de l'utilisateur pour améliorer son profil professionnel en fonction du poste ciblé ({job_description}).
+    **Contexte Global** Sélection stratégique des projets les plus pertinents pour le profil de poste visé.
 
-    **Étape 1 : Lecture des projets sélectionnés** - Utilise 'FileReadTool' pour lire 'output/selected_projects.json'.
+    **Objectifs** - Évaluer l'adéquation entre les projets et le poste - Sélectionner les projets démontrant le meilleur potentiel - Justifier la sélection avec des critères objectifs
 
-    **Étape 2 : Identification des axes d'amélioration** - Analyse {job_description} pour extraire les compétences essentielles requises. - Compare ces compétences avec celles couvertes par les projets sélectionnés. - Identifie les compétences manquantes ou sous-développées.
+    **Processus de Sélection** 1. **Analyse du Contexte** [BraveSearch]
+       - Étude des tendances du marché
+       - Analyse des compétences recherchées
+       - Identification des technologies émergentes
 
-    **Étape 3 : Proposition de nouveaux projets** - Recherche des projets pertinents permettant d'acquérir les compétences manquantes. - Utilise des outils de recherche sur internet pour trouver des idées de projets. - Fournis une liste détaillée des projets recommandés avec :
-      - Nom du projet
-      - Objectif
-      - Technologies utilisées
-      - Ressources utiles (GitHub, Udemy, YouTube, etc.)
+    2. **Évaluation Contextuelle** [RAGTool]
+       - Matching avec la description du poste
+       - Analyse des compétences requises
+       - Évaluation de la pertinence technique
 
-    **Étape 4 : Recommandation de certifications** - Recherche sur internet les certifications les plus valorisées pour le poste. - Vérifie leur pertinence et leur reconnaissance sur le marché du travail. - Fournis pour chaque certification :
-      - Nom
-      - Description
-      - Lien d'inscription
-      - Ressources pour la préparation (cours en ligne, livres, etc.)
+    3. **Analyse Comparative** [JSONRAGSearch]
+       - Scoring des projets selon les critères
+       - Classement par pertinence
+       - Évaluation de la complémentarité
 
-    **Étape 5 : Génération du fichier de sortie** - Structure le rapport sous forme d’un fichier JSON bien formaté contenant :
-      1. **PROJETS_SUGGÉRÉS** : Liste des projets avec détails
-      2. **CERTIFICATIONS_SUGGÉRÉES** : Liste des certifications avec ressources associées
-    - Enregistre le fichier sous 'output/recommandations.json'.
+    **Critères de Sélection** - Alignement technologique - Impact démontrable - Complexité appropriée - Innovation et créativité
 
-  output_file: output/recommandations.json
-  agent: learning_recommender
+    **Format de Sortie** ```json {
+      "selected_projects": [{
+        "name": "string",
+        "relevance_score": "number",
+        "selection_criteria": {
+          "technical_match": "number",
+          "innovation_score": "number",
+          "impact_potential": "number"
+        },
+        "justification": "string"
+      }],
+      "selection_summary": {
+        "total_evaluated": "number",
+        "selection_criteria": ["string"],
+        "market_alignment": "string"
+      }
+    } ```
+
+  output_file: "output/selected_projects.json"
+  agent: project_selector
   context: [ analyze_projects ]
+
+provide_recommendations:
+  description: >
+    **Contexte Global** Recommandations personnalisées pour le développement professionnel basées sur l'analyse du portfolio.
+
+    **Objectifs** - Identifier les opportunités d'amélioration - Recommander des formations pertinentes - Suggérer des certifications stratégiques
+
+    **Processus d'Analyse** 1. **Analyse des Tendances** [BraveSearch]
+       - Veille technologique
+       - Évolutions du marché
+       - Compétences émergentes
+
+    2. **Évaluation des Formations** [WebsiteRAGSearch]
+       - Plateformes de formation
+       - Ressources d'apprentissage
+       - Parcours recommandés
+
+    3. **Analyse des Certifications** [ScrapeflyScrapeTool]
+       - Certifications pertinentes
+       - Prérequis et durée
+       - Reconnaissance marché
+
+    **Format de Sortie** ```json {
+      "skill_development": {
+        "priority_skills": ["string"],
+        "learning_path": [{
+          "skill": "string",
+          "recommended_resources": ["string"],
+          "estimated_timeline": "string"
+        }]
+      },
+      "certifications": [{
+        "name": "string",
+        "priority": "number",
+        "prerequisites": ["string"],
+        "estimated_cost": "number",
+        "market_value": "string"
+      }]
+    } ```
+
+  output_file: "output/recommendations.json"
+  agent: learning_recommender
+  context: [ select_best_projects ]
 
 generate_cv:
   description: >
-    **Contexte et Objectif** - Cette tâche vise à reformuler les expériences du candidat sous un format optimisé pour un CV, en mettant en avant les compétences acquises via les projets pertinents. - L'approche suivie est la méthode STAR (Situation, Tâche, Action, Résultat) pour structurer les expériences de manière impactante.
+    **Contexte Global** Génération d'un CV technique optimisé en format Markdown, mettant en valeur les projets et compétences.
 
-    **Étape 1 : Lecture des projets sélectionnés** - Utilise 'FileReadTool' pour lire 'output/selected_projects.json'.
+    **Objectifs** - Créer un CV professionnel et impactant - Structurer les informations de manière optimale - Optimiser pour les ATS
 
-    **Étape 2 : Reformulation des expériences avec la méthode STAR** - Étudie chaque projet en profondeur. - Structure les réalisations en utilisant STAR (Situation, Tâche, Action, Résultat). - Mets en avant l'impact de chaque projet et sa pertinence pour {job_description}.
+    **Processus de Génération** 1. **Structuration du Contenu** [DirectoryRAGSearch]
+       - Organisation des sections
+       - Hiérarchisation des informations
+       - Sélection des templates
 
-    **Étape 3 : Personnalisation selon l'entreprise** - Recherche des informations sur l'entreprise liée au poste. - Identifie les valeurs et attentes spécifiques de cette entreprise vis-à-vis des candidats. - Adapte la reformulation des expériences pour maximiser leur impact.
+    2. **Optimisation du Contenu** [MDXRAGSearch]
+       - Formulation impactante
+       - Mots-clés pertinents
+       - Format Markdown professionnel
 
-    **Étape 4 : Génération du fichier CSV** - Compile les expériences reformulées dans un format structuré. - Enregistre le fichier dans le dossier 'output' sous le nom 'cv_optimisé.csv'.
+    3. **Intégration des Données** [JSONRAGSearch]
+       - Projets sélectionnés
+       - Compétences techniques
+       - Réalisations clés
 
-  output_file: output/cv_optimisé.csv
+    **Format de Sortie** ```markdown # CV Structure - Informations personnelles - Résumé professionnel - Compétences techniques - Projets significatifs - Formation et certifications ```
+
+  output_file: "output/cv.md"
   agent: cv_generator
-  context: [ analyze_projects ]
+  context: [ select_best_projects, provide_recommendations ]
