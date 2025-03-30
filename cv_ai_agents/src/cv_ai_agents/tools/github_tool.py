@@ -5,27 +5,12 @@ from pydantic import BaseModel, Field, ConfigDict, PrivateAttr
 from crewai.tools import BaseTool
 from crewai import LLM
 import os
+from cv_ai_agents.models import (
+RepoInfo,
+ProjectAnalysis    
+)
 
-class RepoInfo(BaseModel):
-    """Structure des informations brutes d'un repository"""
-    name: str = Field(..., description="Nom du dépôt")
-    description: str = Field("", description="Description du projet")
-    languages: Dict[str, int] = Field(..., description="Langages utilisés")
-    stars: int = Field(0, description="Nombre d'étoiles")
-    forks: int = Field(0, description="Nombre de forks")
-    topics: List[str] = Field(default_factory=list, description="Topics du projet")
-    updated_at: str = Field(..., description="Dernière mise à jour")
-    readme: str = Field("", description="Contenu du README")
 
-class ProjectAnalysis(BaseModel):
-    """Structure de l'analyse d'un projet"""
-    name: str = Field(..., description="Nom du projet")
-    technical_score: float = Field(..., ge=0, le=10, description="Score technique")
-    market_relevance: float = Field(..., ge=0, le=10, description="Pertinence marché")
-    main_features: List[str] = Field(..., description="Fonctionnalités principales")
-    technologies: List[str] = Field(..., description="Technologies principales")
-    difficulty: str = Field(..., description="Niveau de difficulté")
-    learning_value: float = Field(..., ge=0, le=10, description="Valeur d'apprentissage")
 
 class GitHubAnalyzerTool(BaseTool):
     name: str = "GitHub Portfolio Analyzer"
