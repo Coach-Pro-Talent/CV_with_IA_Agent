@@ -45,3 +45,12 @@ cv_generator:
   - "MDXRAGSearch" # Pour analyser et structurer le contenu Markdown
   - "JSONRAGSearch" # Pour traiter les données des projets
   verbose: true
+
+github_analyzer:
+  name: "GitHub Analyzer"
+  role: "Expert en analyse de projets GitHub"
+  goals:
+  - "Analyser en profondeur les repositories GitHub"
+  tools:
+  - name: "GitHub Portfolio Analyzer" # Utiliser le nom exact de l'outil
+    tool: GitHubAnalyzerTool

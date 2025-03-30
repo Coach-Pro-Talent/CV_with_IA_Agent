@@ -1,184 +1,161 @@
 from typing import Dict, Any, List
 from datetime import datetime
-import tempfile
-import shutil
-from github.auth import Token
-from pathlib import Path
-import re
-import os
-from collections import Counter
-from github import Github, GithubException, Repository
-from git import Repo
-from pydantic import BaseModel, Field, field_validator, ConfigDict, ValidationError
+from github import Auth, Github, GithubException, Repository
+from pydantic import BaseModel, Field, ConfigDict, PrivateAttr
 from crewai.tools import BaseTool
 from crewai import LLM
-from langchain.prompts import PromptTemplate
-from langchain.output_parsers import PydanticOutputParser
-from crewai_tools import DirectorySearchTool
+import os
 
-class ProjectInfo(BaseModel):
-    model_config = ConfigDict(extra='allow')
-    
+class RepoInfo(BaseModel):
+    """Structure des informations brutes d'un repository"""
     name: str = Field(..., description="Nom du dépôt")
     description: str = Field("", description="Description du projet")
-    main_features: List[str] = Field(..., description="Fonctionnalités principales", min_items=3)
-    technologies: List[str] = Field(..., description="Technologies utilisées", min_items=3)
-    difficulty: str = Field(..., description="Niveau de difficulté (Débutant, Intermédiaire, Avancé)")
-    stars: int = Field(..., description="Nombre d'étoiles")
-    updated_at: datetime = Field(..., description="Dernière mise à jour")
-    analysis_score: float = Field(..., ge=0, le=10, description="Score d'analyse technique")
+    languages: Dict[str, int] = Field(..., description="Langages utilisés")
+    stars: int = Field(0, description="Nombre d'étoiles")
+    forks: int = Field(0, description="Nombre de forks")
+    topics: List[str] = Field(default_factory=list, description="Topics du projet")
+    updated_at: str = Field(..., description="Dernière mise à jour")
+    readme: str = Field("", description="Contenu du README")
 
-    @field_validator('difficulty')
-    @classmethod
-    def validate_difficulty(cls, v: str) -> str:
-        valid_levels = ["Débutant", "Intermédiaire", "Avancé"]
-        if v not in valid_levels:
-            raise ValueError(f"Niveau invalide: {v}. Options: {', '.join(valid_levels)}")
-        return v
+class ProjectAnalysis(BaseModel):
+    """Structure de l'analyse d'un projet"""
+    name: str = Field(..., description="Nom du projet")
+    technical_score: float = Field(..., ge=0, le=10, description="Score technique")
+    market_relevance: float = Field(..., ge=0, le=10, description="Pertinence marché")
+    main_features: List[str] = Field(..., description="Fonctionnalités principales")
+    technologies: List[str] = Field(..., description="Technologies principales")
+    difficulty: str = Field(..., description="Niveau de difficulté")
+    learning_value: float = Field(..., ge=0, le=10, description="Valeur d'apprentissage")
 
 class GitHubAnalyzerTool(BaseTool):
     name: str = "GitHub Portfolio Analyzer"
-    description: str = (
-        "Analyse complète de tous les dépôts GitHub d'un utilisateur pour l'optimisation CV. "
-        "Fournit une analyse technique détaillée et des métriques de qualité."
-    )
+    description: str = "Analyse des repositories GitHub pour l'optimisation CV"
+
+    _github: Github = PrivateAttr()
+    _llm: LLM = PrivateAttr()
 
     def __init__(self, github_token: str):
         super().__init__()
-        auth  = Token(github_token)
-        self.github = Github(auth = auth)
-        self.llm = LLM(
+        auth = Auth.Token(github_token)
+        self._github = Github(auth=auth)
+        self._llm = LLM(
             model="deepseek-coder-33b-instruct",
             api_key=os.getenv("DEEPSEEK_API_KEY"),
             base_url=os.getenv("DEEP_SEEK_BASE")
         )
-        self.parser = PydanticOutputParser(pydantic_object=ProjectInfo)
 
     def _run(self, username: str, max_repos: int = 10) -> Dict[str, Any]:
+        """Analyse complète des repositories"""
+        print(f"Recuperation des données de {username} sur github...")
         try:
-            user = self.github.get_user(username)
-            repos = self._get_filtered_repos(user, max_repos)
-            
-            results = []
-            for repo in repos:
-                try:
-                    result = self._full_analysis(repo)
-                    results.append(result)
-                except Exception as e:
-                    continue
+            repos_data = self._fetch_repos(username, max_repos)
+            int i = 0;
+            analysis_results = []
+            for repo in repos_data:
+                print("Traitement sur le {i} repo : ")
+                analysis = self._analyze_with_llm(repo)
+                analysis_results.append(analysis)
+                i +=1
 
-            return self._generate_summary(results)
+            summary = self._generate_summary_with_llm(analysis_results)
 
-        except GithubException as e:
-            raise RuntimeError(f"Erreur GitHub: {str(e)}")
-
-    def _get_filtered_repos(self, user, max_repos: int) -> List[Repository.Repository]:
-        return sorted(
-            user.get_repos(sort="updated", direction="desc"),
-            key=lambda r: (-r.stargazers_count, -r.forks_count),
-        )[:max_repos]
-
-    def _full_analysis(self, repo: Repository.Repository) -> Dict[str, Any]:
-        with tempfile.TemporaryDirectory() as temp_dir:
-            self._clone_repo(repo.clone_url, temp_dir)
-            
-            code_analysis = self._analyze_codebase(temp_dir)
-            readme_analysis = self._analyze_readme(repo)
-            
             return {
-                "basic_info": self._get_basic_info(repo),
-                "technical_analysis": code_analysis,
-                "readme_quality": readme_analysis,
-                "market_score": self._calculate_market_score(repo),
+                "username": username,
+                "summary": summary,
+                "projects": analysis_results,
+                "timestamp": datetime.now().isoformat()
             }
 
-    def _analyze_codebase(self, repo_path: str) -> Dict[str, Any]:
-        try:
-            search_tool = DirectorySearchTool(
-                directory=repo_path,
-                glob="**/*.*",
-                recursive=True,
-                chunk_size=2000,
-                similarity_threshold=0.85,
-            )
+        except Exception as e:
+            raise RuntimeError(f"Erreur d'analyse: {str(e)}")
 
-            prompt_template = PromptTemplate(
-                template="""Analyse technique du code suivant :
-                {context}
+    def _fetch_repos(self, username: str, max_repos: int) -> List[Dict]:
+        """Récupération des données brutes des repositories"""
+        user = self._github.get_user(username)
+        repos = user.get_repos(sort="updated", direction="desc")
+        
+        repos_data = []
+        for repo in list(repos)[:max_repos]:
+            try:
+                repo_info = RepoInfo(
+                    name=repo.name,
+                    description=repo.description or "",
+                    languages=repo.get_languages(),
+                    stars=repo.stargazers_count,
+                    forks=repo.forks_count,
+                    topics=repo.get_topics(),
+                    updated_at=repo.updated_at.isoformat(),
+                    readme=self._get_readme_content(repo)
+                )
+                repos_data.append(repo_info.model_dump())
+            except Exception as e:
+                print(f"Erreur pour {repo.name}: {str(e)}")
+                continue
                 
-                {format_instructions}
-                """,
-                input_variables=["context"],
-                partial_variables={"format_instructions": self.parser.get_format_instructions()}
-            )
+        return repos_data
 
-            context = search_tool.run("Analyse de l'architecture et des patterns techniques")
-            result = self.llm.invoke(prompt_template.format(context=context))
-            
-            return self.parser.parse(result.content).dict()
-
-        except ValidationError as e:
-            return {"error": str(e)}
-
-    def _analyze_readme(self, repo: Repository.Repository) -> Dict[str, Any]:
-        readme = self._get_readme_content(repo)
-        return {
-            "quality_score": len(readme) // 1000,
-            "sections": self._detect_readme_sections(readme),
-            "update_frequency": self._calculate_update_frequency(repo),
-        }
-
-    def _get_basic_info(self, repo: Repository.Repository) -> Dict[str, Any]:
-        return {
-            "name": repo.name,
-            "description": repo.description,
-            "stars": repo.stargazers_count,
-            "forks": repo.forks_count,
-            "languages": repo.get_languages(),
-            "created_at": repo.created_at.isoformat(),
-            "updated_at": repo.updated_at.isoformat(),
-            "topics": repo.get_topics(),
-            "size": repo.size,
-            "license": repo.license.spdx_id if repo.license else None,
-        }
-
-    def _clone_repo(self, clone_url: str, target_dir: str):
-        Repo.clone_from(clone_url, target_dir, depth=1, filter="blob:none")
-
-    def _get_readme_content(self, repo: Repository.Repository) -> str:
+    def _get_readme_content(self, repo: Repository) -> str:
+        """Récupération du README"""
         try:
             readme = repo.get_readme()
-            return readme.decoded_content.decode("utf-8")[:10000]
+            return readme.decoded_content.decode("utf-8")
         except:
             return ""
 
-    # Méthodes utilitaires supplémentaires
-    def _calculate_market_score(self, repo: Repository.Repository) -> float:
-        return (repo.stargazers_count * 0.4 + 
-                repo.forks_count * 0.3 + 
-                len(repo.get_commits()) * 0.2 + 
-                len(repo.get_contributors()) * 0.1)
+    def _analyze_with_llm(self, repo_data: Dict) -> Dict:
+        print("L'IA est entrain d'analyser le repository...")
+        """Analyse d'un repository par le LLM"""
+        prompt = """
+        Analysez ce repository GitHub et fournissez une évaluation détaillée:
 
-    def _detect_readme_sections(self, content: str) -> List[str]:
-        sections = []
-        if re.search(r"##\s+Installation", content, re.IGNORECASE):
-            sections.append("installation")
-        if re.search(r"##\s+Features", content, re.IGNORECASE):
-            sections.append("features")
-        return sections
+        Informations du repository:
+        Nom: {name}
+        Description: {description}
+        Langages: {languages}
+        Stars: {stars}
+        Forks: {forks}
+        Topics: {topics}
+        README: {readme}
 
-    def _generate_summary(self, results: List[Dict]) -> Dict[str, Any]:
-        return {
-            "user_summary": {
-                "total_repos": len(results),
-                "top_languages": self._get_top_technologies(results),
-                "activity_score": sum(r["basic_info"]["stars"] for r in results),
-            },
-            "project_analyses": results,
-        }
+        Fournissez une analyse structurée avec:
+        1. Score technique (0-10)
+        2. Pertinence marché (0-10)
+        3. Fonctionnalités principales (liste)
+        4. Technologies principales utilisées (liste)
+        5. Niveau de difficulté (Débutant/Intermédiaire/Avancé)
+        6. Valeur d'apprentissage (0-10)
 
-    def _get_top_technologies(self, results: List[Dict]) -> List[str]:
-        tech_counter = Counter()
-        for project in results:
-            tech_counter.update(project["technical_analysis"].get("technologies", []))
-        return [tech for tech, _ in tech_counter.most_common(5)]
+        Retournez l'analyse au format JSON.
+        """
+
+        try:
+            result = self._llm.invoke(prompt.format(**repo_data))
+            return ProjectAnalysis.model_validate_json(result.content).model_dump()
+        except Exception as e:
+            return {
+                "name": repo_data["name"],
+                "error": str(e)
+            }
+
+    def _generate_summary_with_llm(self, analyses: List[Dict]) -> Dict:
+        """Génération du résumé par le LLM"""
+        prompt = """
+        Générez un résumé global de ces projets GitHub:
+
+        Projets analysés:
+        {projects}
+
+        Fournissez un résumé avec:
+        1. Technologies dominantes
+        2. Points forts globaux
+        3. Niveau technique global
+        4. Recommandations d'amélioration
+
+        Retournez le résumé au format JSON.
+        """
+
+        try:
+            result = self._llm.invoke(prompt.format(projects=analyses))
+            return result.content
+        except Exception as e:
+            return {"error": str(e)}
