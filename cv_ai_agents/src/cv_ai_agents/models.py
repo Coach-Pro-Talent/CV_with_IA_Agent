@@ -45,3 +45,14 @@ class RepoInfo(BaseModel):
     topics: List[str] = Field(default_factory=list, description="Topics du projet")
     updated_at: str = Field(..., description="Dernière mise à jour")
     readme: str = Field("", description="Contenu du README")
+
+# Ajoutez ces modèles dans models.py
+class ProjectAnalysisList(BaseModel):
+    """Conteneur pour une liste d'analyses de projets"""
+    projects: List[ProjectAnalysis]
+
+class SelectedProjectList(BaseModel):
+    projects: List[SelectedProject]
+
+class TrainingRecommendationList(BaseModel):
+    recommendations: List[TrainingRecommendation]

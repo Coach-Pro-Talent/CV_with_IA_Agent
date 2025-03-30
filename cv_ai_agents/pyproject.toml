@@ -1,15 +1,29 @@
 [project]
-name = "cv_ai_agents"
+name = "cv_agents"
 version = "0.1.0"
-description = "cv_ai_agents using crewAI"
+description = "cv_agents using crewAI"
 authors = [{ name = "Your Name", email = "you@example.com" }]
 requires-python = ">=3.10,<3.13"
 dependencies = [
-    "crewai[tools]>=0.108.0,<1.0.0"
+    "crewai[tools]>=0.108.0,<1.0.0",
+    "PyGithub>=2.1.1",
+    "together>=0.2.0",
+    "pydantic>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "PyYAML>=6.0.1",
+   "GitPython>=3.1.40",
+
+
+    
+    # Utilities
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.2",  # Pour le web scraping
+    "markdown>=3.5.1",
 ]
 
+
 [project.scripts]
-cv_ai_agents = "cv_ai_agents.main:run"
+cv_agents = "cv_ai_agents.main:run"
 run_crew = "cv_ai_agents.main:run"
 train = "cv_ai_agents.main:train"
 replay = "cv_ai_agents.main:replay"
@@ -21,3 +35,17 @@ build-backend = "hatchling.build"
 
 [tool.crewai]
 type = "crew"
+
+
+[tool.hatch.build]
+include = [
+    "cv_ai_agents/**/*",  # Remplacez par le nom réel de votre package
+    "config/*.yaml",
+    "output/"
+]
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "cv_ai_agents",  # Doit correspondre au nom de votre dossier de code
+    "config"
+]

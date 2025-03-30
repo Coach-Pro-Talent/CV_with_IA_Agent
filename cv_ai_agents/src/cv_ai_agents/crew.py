@@ -6,6 +6,17 @@ from crewai_tools import (
     FileReadTool
 
 )
+from typing import List
+
+from .models import (
+    ProjectAnalysis,
+    SelectedProject,
+    TrainingRecommendation,
+    ProjectAnalysisList,
+    SelectedProjectList,
+    TrainingRecommendationList,
+    CVContent
+)
 # If you want to run a snippet of code before or after the crew starts,
 # you can use the @before_kickoff and @after_kickoff decorators
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
@@ -73,8 +84,8 @@ class CvAiAgents():
         """Analyse des projets GitHub."""
         return Task(
             config=self.tasks_config['analyze_projects'],
-            expected_output=ProjectAnalysis,
-            output_json="output/projects_analysis.json"
+            output_pydantic=ProjectAnalysisList,
+            output_file="output/projects_analysis.json"
             
         )
 
@@ -83,9 +94,9 @@ class CvAiAgents():
         """Sélection des meilleurs projets."""
         return Task(
             config=self.tasks_config['select_best_projects'],
-            expected_output=List[SelectedProject],
-            output_json="output/selected_projects.json",
-            context=[analyze_projects]
+            output_pydantic=SelectedProjectList,
+            output_file="output/selected_projects.json",
+            context=[self.analyze_projects]
         )
 
     @task
@@ -93,9 +104,9 @@ class CvAiAgents():
         """Recommandations de formations."""
         return Task(
             config=self.tasks_config['provide_recommendations'],
-            expected_output=List[TrainingRecommendation],
-            output_json="output/recommendations.json",
-            context=[select_best_projects]
+            output_pydantic=TrainingRecommendationList,
+            output_file="output/recommendations.json",
+            context=[self.select_best_projects]
         )
 
     @task
@@ -103,9 +114,9 @@ class CvAiAgents():
         """Génération du CV."""
         return Task(
             config=self.tasks_config['generate_cv'],
-            expected_output=CVContent,
+            output_pydantic=CVContent,
             output_file="output/cv.md",
-            context = [provide_recommendations]
+            context = [self.provide_recommendations]
         )
 
     @crew
