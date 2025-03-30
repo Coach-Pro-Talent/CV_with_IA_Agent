@@ -49,7 +49,7 @@ class GitHubAnalyzerTool(BaseTool):
         print(f"Recuperation des données de {username} sur github...")
         try:
             repos_data = self._fetch_repos(username, max_repos)
-            int i = 0;
+            i = 0;
             analysis_results = []
             for repo in repos_data:
                 print("Traitement sur le {i} repo : ")
