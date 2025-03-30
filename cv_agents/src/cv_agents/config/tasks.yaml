@@ -1,4 +1,4 @@
-evaluate_projects:
+evaluate_projects_task:
   description: >
     **Contexte et Objectif** - Cette tâche vise à analyser une liste de projets disponibles afin d'identifier ceux qui sont les plus pertinents pour un poste spécifique ({description_poste}). - L'objectif est de fournir une évaluation objective des projets en fonction des exigences du poste et de sélectionner les meilleurs.
 
@@ -18,7 +18,7 @@ evaluate_projects:
   output_file: output/selected_projects.json
   agent: project_analyzer
 
-give_recommendations:
+give_recommendations_task:
   description: >
     **Contexte et Objectif** - Cette tâche vise à fournir des recommandations de projets et de certifications adaptées aux besoins de l'utilisateur pour améliorer son profil professionnel en fonction du poste ciblé ({description_poste}).
 
@@ -45,8 +45,9 @@ give_recommendations:
 
   output_file: output/recommandations.json
   agent: learning_recommender
+  context: [ evaluate_projects ]
 
-write_csv:
+write_csv_task:
   description: >
     **Contexte et Objectif** - Cette tâche vise à reformuler les expériences du candidat sous un format optimisé pour un CV, en mettant en avant les compétences acquises via les projets pertinents. - L'approche suivie est la méthode STAR (Situation, Tâche, Action, Résultat) pour structurer les expériences de manière impactante.
 
@@ -60,3 +61,4 @@ write_csv:
 
   output_file: output/cv_optimisé.csv
   agent: cv_generator
+  context: [ evaluate_projects ]
