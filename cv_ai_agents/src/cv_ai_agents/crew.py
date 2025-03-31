@@ -1,134 +1,118 @@
-from crewai import Agent, Crew, Process, Task, LLM
+from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
-from cv_ai_agents.tools.github_tool import GitHubAnalyzerTool
+from crewai.knowledge.source.text_file_knowledge_source import TextFileKnowledgeSource
 from crewai_tools import (
+    TXTSearchTool,
+    FileReadTool,
     FileWriterTool,
-    FileReadTool
-
+    ScrapeWebsiteTool,
+    SerperDevTool
 )
-from typing import List
-
-from .models import (
-    ProjectAnalysis,
-    SelectedProject,
-    TrainingRecommendation,
-    ProjectAnalysisList,
-    SelectedProjectList,
-    TrainingRecommendationList,
-    CVContent
-)
-# If you want to run a snippet of code before or after the crew starts,
-# you can use the @before_kickoff and @after_kickoff decorators
-# https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
+from cv_ai_agents.tools.github_tool import GithubTool
 
 @CrewBase
 class CvAiAgents():
     """CvAiAgents crew"""
 
-    # Learn more about YAML configuration files here:
-    # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
-    # Tasks: https://docs.crewai.com/concepts/tasks#yaml-configuration-recommended
     agents_config = 'config/agents.yaml'
     tasks_config = 'config/tasks.yaml'
 
-    # If you would like to add tools to your agents, you can learn more about it here:
-    # https://docs.crewai.com/concepts/agents#agent-tools
+    text_source = TextFileKnowledgeSource(
+        file_paths=["user_preference.txt"]
+    )
+
     @agent
     def github_analyst(self) -> Agent:
-        """Agent d'analyse des projets GitHub."""
         return Agent(
             config=self.agents_config['github_analyst'],
-            llm=LLM('o1'),
-            tools=[
-                GitHubAnalyzerTool(github_token=os.getenv("GITHUB_TOKEN")),
-                FileWriterTool()
-            ],
-            verbose=True
+            allow_delegation=False,
+            verbose=True,
+            tools=[FileReadTool(), GithubTool()]
+        )
+
+    @agent
+    def job_analyst(self) -> Agent:
+        return Agent(
+            config=self.agents_config['job_analyst'],
+            allow_delegation=False,
+            verbose=True,
+            tools=[FileWriterTool()]
         )
 
     @agent
     def project_selector(self) -> Agent:
-        """Agent de sélection des meilleurs projets."""
         return Agent(
             config=self.agents_config['project_selector'],
-            llm=LLM('o1'),
-            tools=[FileReadTool()],
-            verbose=True
+            allow_delegation=False,
+            verbose=True,
+            tools=[FileWriterTool(), FileReadTool(), self.text_source]
         )
 
     @agent
     def learning_recommender(self) -> Agent:
-        """Agent de recommandation de formations."""
         return Agent(
-            config=self.agents_config['learning_recommender'],
-            llm=LLM('o1'),
-            tools=[FileReadTool()],
-            verbose=True
+            config=self.agents_config["learning_recommender"],
+            allow_delegation=False,
+            verbose=True,
+            tools=[FileWriterTool(), FileReadTool(), SerperDevTool(), ScrapeWebsiteTool(), self.text_source]
         )
 
     @agent
-    def cv_generator(self) -> Agent:
-        """Agent de génération de CV."""
+    def cv_writer(self) -> Agent:
         return Agent(
-            config=self.agents_config['cv_generator'],
-            llm=LLM('o1'),
-            tools=[
-                FileWriterTool(),
-                FileReadTool()
-            ],
-            verbose=True
+            config=self.agents_config["cv_writer"],
+            allow_delegation=False,
+            verbose=True,
+            tools=[FileReadTool(), FileWriterTool(), self.text_source]
+        )
+
+    # DEFINITION DES TASKS
+
+    @task
+    def recuperer_github_repo(self) -> Task:
+        return Task(
+            config=self.tasks_config['recuperer_github_repo'],
+            agent=self.github_analyst
         )
 
     @task
-    def analyze_projects(self) -> Task:
-        """Analyse des projets GitHub."""
+    def analyser_offre(self) -> Task:
         return Task(
-            config=self.tasks_config['analyze_projects'],
-            output_pydantic=ProjectAnalysisList,
-            output_file="output/projects_analysis.json"
-            
+            config=self.tasks_config['analyser_offre'],
+            agent=self.job_analyst
         )
 
     @task
-    def select_best_projects(self) -> Task:
-        """Sélection des meilleurs projets."""
+    def selectionner_meilleurs_projets(self) -> Task:
         return Task(
-            config=self.tasks_config['select_best_projects'],
-            output_pydantic=SelectedProjectList,
-            output_file="output/selected_projects.json",
-            context=[self.analyze_projects]
+            config=self.tasks_config['selectionner_meilleurs_projets'],
+            agent=self.project_selector,
+            context=[self.analyser_offre(), self.recuperer_github_repo()]
         )
 
     @task
-    def provide_recommendations(self) -> Task:
-        """Recommandations de formations."""
+    def fournir_des_recommandations(self) -> Task:
         return Task(
-            config=self.tasks_config['provide_recommendations'],
-            output_pydantic=TrainingRecommendationList,
-            output_file="output/recommendations.json",
-            context=[self.select_best_projects]
+            config=self.tasks_config['fournir_des_recommandations'],
+            agent=self.learning_recommender,
+            context=[self.analyser_offre(), self.selectionner_meilleurs_projets()]
         )
 
     @task
-    def generate_cv(self) -> Task:
-        """Génération du CV."""
+    def create_cv(self) -> Task:
         return Task(
-            config=self.tasks_config['generate_cv'],
-            output_pydantic=CVContent,
-            output_file="output/cv.md",
-            context = [self.provide_recommendations]
+            config=self.tasks_config['create_cv'],
+            agent=self.cv_writer,
+            output_file='report.md',
+            context=[self.fournir_des_recommandations(), self.selectionner_meilleurs_projets()]
         )
 
     @crew
     def crew(self) -> Crew:
         """Creates the CvAiAgents crew"""
-        # To learn how to add knowledge sources to your crew, check out the documentation:
-        # https://docs.crewai.com/concepts/knowledge#what-is-knowledge
-
         return Crew(
-            agents=self.agents, # Automatically created by the @agent decorator
-            tasks=self.tasks, # Automatically created by the @task decorator
+            agents=[self.github_analyst(), self.job_analyst(), self.project_selector(), self.learning_recommender(), self.cv_writer()],  # Automatically created by the @agent decorator
+            tasks=[self.recuperer_github_repo(), self.analyser_offre(), self.selectionner_meilleurs_projets(), self.fournir_des_recommandations(), self.create_cv()],  # Automatically created by the @task decorator
             process=Process.sequential,
             verbose=True,
-            # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
         )
