@@ -43,7 +43,7 @@ Les étudiants ingénieurs ont souvent du mal à identifier et mettre en valeur 
 ![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
 ![CrewAI](https://img.shields.io/badge/CrewAI-Agent--Based-orange)
 ![OpenAI](https://img.shields.io/badge/OpenAI-GPT4-lightgrey?logo=openai)
-![Azure](https://img.shields.io/badge/Microsoft-Azure-blue?logo=microsoft)
+![Streamlit](https://img.shields.io/badge/Streamlit-App-red?logo=streamlit)
 ![GitHub API](https://img.shields.io/badge/GitHub-API-black?logo=github)
 
 ---
@@ -59,4 +59,8 @@ python3.11 -m venv env
 source env/bin/activate
 
 # Installe les dépendances
-pip install crewai crewai[tools] openai PyGithub pydantic
+pip install crewai crewai[tools] openai PyGithub pydantic streamlit
+
+# Lancer Application
+
+Pour lancer l'application entrer dans la console  streamlit run app.py (rassurer vous que votre environnement est activé)
