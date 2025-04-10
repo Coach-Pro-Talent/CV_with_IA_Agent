@@ -7,7 +7,7 @@ from agents import github_analyst, job_analyst, project_selector, learning_recom
 load_dotenv()
 
 st.markdown(
-    "<h1 style='text-align: center; color: orange;font-weight:bold'>🚀 ZTF - Sélection des Meilleurs Projets</h1>",
+    "<h1 style='text-align: center; color: orange;font-weight:bold'>🚀 ZTF - CV Generator</h1>",
     unsafe_allow_html=True
 )
 
@@ -26,7 +26,7 @@ result = None
 
 # Lancer le crew
 if st.button("🚀 Lancer la sélection", disabled=not inputs_ready):
-    # Rassembler les inputs
+
     launch_details = {
         "nombre_projet": num_projects,
         "job_description": job_description
