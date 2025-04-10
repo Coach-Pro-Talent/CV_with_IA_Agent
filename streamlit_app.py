@@ -1,7 +1,8 @@
 import streamlit as st
 import time
 from crew import cv_launch
-
+from dotenv import load_dotenv
+load_dotenv()
 
 st.markdown(
     "<h1 style='text-align: center; color: orange;font-weight:bold'>🚀 ZTF - Sélection des Meilleurs Projets</h1>",
