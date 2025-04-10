@@ -1,5 +1,5 @@
 from crewai import Task
-from crewai_tools import FileReadTool, FileWriterTool, SerperDevTool
+from crewai_tools import FileReadTool, FileWriterTool, SerperDevTool,ScrapeWebsiteTool
 from tools.github_tool import GithubTool
 from agents import github_analyst,job_analyst,project_selector , learning_recommender, cv_writer
 
@@ -120,7 +120,7 @@ fournir_des_recommandations = Task(
                       2. Lire `output/top_project.json` pour analyser les projets sélectionnés (`FileReadTool`).
                       3. Proposer des recommandations personnalisées en fonction des compétences de l'utilisateur et des tendances du marché.
                       4. Enrichir avec des ressources d’apprentissage (liens, formations, tutoriels, networking, etc.).
-                      5. Sauvegarder les recommandations dans 'output/recommandations.json' en utilisant `FileWriterTool`.
+                      5. Sauvegarder les recommandations dans 'output/recommendations.json' en utilisant `FileWriterTool`.
                   Recommende de nouveau projet impactant (je ne veux pas ce qui ont déjà été relever)
                   Les projets que tu recommanderas doivent être bien detaillé
                    """,
@@ -137,7 +137,7 @@ fournir_des_recommandations = Task(
       context = [selectionner_meilleurs_projets, recuperer_github_repo, analyser_offre],
                   tools=[FileWriterTool(), FileReadTool(), SerperDevTool(), ScrapeWebsiteTool()],
       agent = learning_recommender,
-      output_file='recommandations.json'
+      output_file='output/recommendations.json'
 )
 
 
