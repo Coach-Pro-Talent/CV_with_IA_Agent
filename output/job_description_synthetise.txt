@@ -1,0 +1,39 @@
+Hardskills:
+- Maîtrise des langages de programmation (Python, Java, Scala)
+- Expérience avec les systèmes de gestion de bases de données (SQL, NoSQL)
+- Connaissances en ETL et data warehousing
+- Familiarité avec des outils big data (Hadoop, Spark)
+- Compétence en data modeling et architecture de données
+
+Softskills:
+- Capacité à travailler en équipe et bonne communication
+- Résolution de problèmes et pensée analytique
+- Adaptabilité et volonté d'apprendre
+
+Must-have:
+- Diplôme en informatique, en ingénierie ou dans un domaine connexe
+- Expérience professionnelle d’au moins 3 ans en tant que data engineer
+- Connaissance des méthodologies agiles
+
+Nice-to-have:
+- Expérience en machine learning ou en intelligence artificielle
+- Connaissance des outils de visualisation de données (Tableau, Power BI)
+- Certifications en cloud (AWS, Azure)
+
+Opportunités pour booster la candidature:
+- Projets en open source ou contributions à des communautés techniques
+- Participations à des hackathons liés aux données
+- Rédaction de blogs ou articles sur les tendances des données
+
+Points de vigilance et conseils:
+- S'assurer de personnaliser son CV selon les mots-clés de l'offre
+- Préparation aux questions comportementales basées sur les softskills
+- Illustrer ses expériences passées avec des exemples concrets et mesurables
+
+Niveau d'expérience recommandé:
+- 3 à 5 ans d'expérience en data engineering
+
+Tendances du marché et secteur d'activité:
+- Croissance continue de l'utilisation des données dans tous les secteurs
+- Fort besoin des entreprises pour des experts en data science et data engineering
+- Montée en puissance des technologies de cloud computing et des solutions de big data.

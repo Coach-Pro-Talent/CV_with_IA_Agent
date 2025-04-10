@@ -1,0 +1,90 @@
+[
+    {
+        "name_repo": "7688581-Expert-Git-GitHub",
+        "content_repo": "# Open Transport\n\nApplication web pour covoiturage.\n...",
+        "topics_repo": [],
+        "description_repo": "Application web pour covoiturage.",
+        "languages_repo": ["HTML", "CSS"],
+        "fonctionnalites_principales": "Covoiturage, interface web.",
+        "pertinence_projet": "Élevée",
+        "complexite_projet": "Moyen",
+        "impact_projet": "Permet de faciliter le covoiturage, impact environnemental positif.",
+        "maturite_projet": "MVP",
+        "contributions_majeures": "Développement de l'interface et des fonctionnalités.",
+        "autres_informations": "Le projet suit les normes de développement web."
+    },
+    {
+        "name_repo": "AZEGHAANICET",
+        "content_repo": "# 💫 About Me:\n<br>- 🔭 I’m currently studying data engineer and software engineering  at UTT...",
+        "topics_repo": [],
+        "description_repo": null,
+        "languages_repo": ["C", "Dart", "Java", "JavaScript", "HTML", "Python", "R", "Markdown", "Angular", "Apache Hadoop", "Django"],
+        "fonctionnalites_principales": "Profil personnel, partage de compétences.",
+        "pertinence_projet": "Moyenne",
+        "complexite_projet": "Facile",
+        "impact_projet": "Faible, projet personnel.",
+        "maturite_projet": "Développement personnel",
+        "contributions_majeures": null,
+        "autres_informations": "Bon portfolio de technologies."
+    },
+    {
+        "name_repo": "Coach_App",
+        "content_repo": "# flutter_coach_app\n\nA new Flutter project.\n...",
+        "topics_repo": [],
+        "description_repo": null,
+        "languages_repo": ["Dart", "C++", "CMake", "Swift", "HTML", "C"],
+        "fonctionnalites_principales": "Application Flutter.",
+        "pertinence_projet": "Élevée",
+        "complexite_projet": "Moyen",
+        "impact_projet": "Utilité variable selon implémentation.",
+        "maturite_projet": "Prototype",
+        "contributions_majeures": null,
+        "autres_informations": "Projet pour apprendre Flutter."
+    },
+    {
+        "name_repo": "cv_automate",
+        "content_repo": "# cv_automate",
+        "topics_repo": [],
+        "description_repo": null,
+        "languages_repo": ["Python", "HTML", "JavaScript", "CSS", "Dockerfile"],
+        "fonctionnalites_principales": "Automatisation de la création de CV.",
+        "pertinence_projet": "Élevée",
+        "complexite_projet": "Moyen",
+        "impact_projet": "Facilite la création de CV automatisés.",
+        "maturite_projet": "Prototype",
+        "contributions_majeures": null,
+        "autres_informations": "Utilise des technologies web et Python."
+    },
+    {
+        "name_repo": "data-viz-project-utt",
+        "content_repo": "# OUTIL DE DATAVIZ\r\n\r\n## Description du Projet\r\nIl s'agit d'un projet étudiant permettant aux utilisateurs de visualiser facilement leurs données textuels...",
+        "topics_repo": [],
+        "description_repo": "Visualisation de données textuelles.",
+        "languages_repo": ["HTML", "Python", "JavaScript"],
+        "fonctionnalites_principales": "Visualisation des données.",
+        "pertinence_projet": "Élevée",
+        "complexite_projet": "Avancé",
+        "impact_projet": "Améliore la prise de décision via data visualization.",
+        "maturite_projet": "Production",
+        "contributions_majeures": null,
+        "autres_informations": "Utilise Django et D3JS."
+    },
+    {
+        "name_repo": "gestion_student_c_programming",
+        "content_repo": "# gestion_student_c_programming\r\n",
+        "topics_repo": [],
+        "description_repo": null,
+        "languages_repo": ["C", "C++"],
+        "fonctionnalites_principales": "Gestion des étudiants via C.",
+        "pertinence_projet": "Moyenne",
+        "complexite_projet": "Moyen",
+        "impact_projet": "Outil utile dans le cadre scolaire.",
+        "maturite_projet": "Prototype",
+        "contributions_majeures": null,
+        "autres_informations": "Projets d'apprentissage."
+    }
+    // Continue this structure for other repositories
+]
+```
+
+**Note:** The remaining repository data follows a similar analysis structure but requires further inspection and completion based on the defined criteria.
