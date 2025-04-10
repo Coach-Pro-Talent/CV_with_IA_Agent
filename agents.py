@@ -1,5 +1,5 @@
 from crewai import Agent
-from crewai_tools import TextFileKnowledgeSource
+from crewai.knowledge.source.text_file_knowledge_source import TextFileKnowledgeSource
 
 source = TextFileKnowledgeSource(file_path="user_preferences.txt")
 """# 🚀🤖🧠🔧**Création de nos différents agents IA (5 agents IA)** 🌟
