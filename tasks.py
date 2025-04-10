@@ -152,7 +152,7 @@ create_cv = Task(
                     4. Sauvegarder le CV dans 'output/cv_optimise.md'.
                     Le cv devra contenir juste les projets de l'utilisateur notamment les projets qui ont été récupéré ne rajoute pas d'autres
 
-                   Rajoute des icones et des couleurs sur le rendu final
+                   Rajoute des icones et des couleurs sur le rendu final (le CV devra être bien personnalisé, cadrant avec les CVs les plus impactants et prêt à l'emploi)
   """,
 
   expected_output="""
