@@ -122,7 +122,7 @@ fournir_des_recommandations = Task(
                       4. Enrichir avec des ressources d’apprentissage (liens, formations, tutoriels, networking, etc.).
                       5. Sauvegarder les recommandations dans 'output/recommendations.json' en utilisant `FileWriterTool`.
                   Recommende de nouveau projet impactant (je ne veux pas ce qui ont déjà été relever)
-                  Les projets que tu recommanderas doivent être bien detaillé
+                  Les projets que tu recommanderas doivent être bien detaillé. Les projets doivent refleter et resoudre les problèmes de la vie réelle ils doivent apporter de la valeur aux entreprises je ne veux pas des projets qui ne servent à rien et qui n'impacte pas la vie des entreprises
                    """,
       expected_output= """
 
