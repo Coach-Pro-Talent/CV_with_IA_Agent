@@ -96,7 +96,7 @@ selectionner_meilleurs_projets = Task(
                     Un fichier JSON contenant :
                   - nom_projet : Nom du projet sélectionné
                   - description : Description détaillée du projet
-                  - taches_principales : Liste des tâches principales (méthode STAR)
+                  - taches_principales : Liste des tâches principales bien expliqué et pertinente pour impacter le recruteur
                   - pertinence_pour_le_poste : Justification du choix
                   - technologies_utilisees : Technologies principales du projet
                   - niveau_de_complexite : Facile / Moyen / Avancé
@@ -156,7 +156,7 @@ create_cv = Task(
   """,
 
   expected_output="""
-                Un fichier Markdown contenant (les projets doivent etre bien detaillés et surtour en respectant la methode STAR n'ajoute aucune informations qui ne t'a pas été fourni) :
+                Un fichier Markdown contenant (les projets doivent etre bien detaillés , compréhensible et impactant aux yeux du recruteur surtout n'ajoute aucune informations qui ne t'a pas été fourni) :
                     - Informations personnelles de l'utilisateur en te basant sur la base de connaissance de l'utilisateur
                     - Résumé des compétences
                     - Projets pertinents pour le poste (tu renommera ses projets pertinents en 'Mes projets')
